@@ -1,0 +1,110 @@
+{% extends 'blog/base.html' %}
+{% block title %} {{ post.title }} | {{ block.super }}{% endblock %}
+{% block content %}
+    <div class="messages">
+        {% if messages %}
+            {% for message in messages %}
+                <p class="alert alert-{{ message.tags }}">
+                    {{ message }}
+                </p>
+            {% endfor %}
+        {% endif %}
+    </div>
+    <h3>{{ post.title }}</h3>
+    <small> Post created by: {{ post.author }}</small>
+    <hr>
+    <p> {{ post.body }}</p>
+    <div class="row gallery">
+        {% for p in post.images_set.all %}
+            <div class="col-md-3">
+                <img src="{{ p.image.url }}" alt="Image Not Found" class="img-thumbnail">
+            </div>
+        {% endfor %}
+
+    </div>
+    {{ total_likes }} Like {{ total_likes | pluralize }}
+    {% if request.user.is_authenticated %}
+        <form action="{% url 'like_post' %}" method="post">
+            {% csrf_token %}
+            {% if is_liked %}
+                <button type="submit" name="post_id" value="{{ post.id }}" class="btn btn-danger">Dislike</button>
+            {% else %}
+                <button type="submit" name="post_id" value="{{ post.id }}" class="btn btn-primary">Like</button>
+            {% endif %}
+        </form>
+    {% endif %}
+    {% if post.author == request.user %}
+        <div class="section-1" style="float: right">
+            <a href="{% url 'post_edit' id=post.id %}">
+                <button type="button" class="btn btn-outline-success">Edit</button>
+            </a>
+            <a href="{% url 'post_delete' id=post.id %}">
+                <button type="button" class="btn btn-danger" id="delete">Delete</button>
+            </a>
+        </div>
+    {% endif %}
+
+    <br>
+    <br>
+    <hr>
+
+
+
+
+    <div class="main-comment-section">
+        <div class=" container-fluid mt-2">
+            <div class="form-group row">
+                <form method="post">
+                    {% csrf_token %}
+                    {{ comment_form.as_p }}
+                    {% if request.user.is_authenticated %}
+                        <input type="submit" value="Submit" class="btn btn-outline-success">
+                    {% else %}
+                        <input type="submit" value="Submit" class="btn btn-outline-success" disabled>
+                    {% endif %}
+
+                </form>
+            </div>
+        </div>
+        {{ comments.count }} Comment {{ comments | pluralize }}
+        {% for comment in comments %}
+            <blockquote class="blockquote">
+                <p class="mb-0">{{ comment.content }}</p>
+                <footer class="blockquote-footer">by <cite title="Source Title">{{ comment.user | capfirst }}</cite>
+                </footer>
+                <button type="button" name="button" class="reply-btn btn btn-outline-dark btn-sm ml-2 ">
+                    Reply
+                </button>
+            </blockquote>
+            <div class="replies-comments container mt-2" style="display:none">
+                {% for reply in comment.replies.all %}
+                    <blockquote class="blockquote">
+                        <p class="mb-0">{{ reply.content }}</p>
+                        <footer class="blockquote-footer">by <cite
+                                title="Source Title">{{ reply.user | capfirst }}</cite></footer>
+                    </blockquote>
+                {% endfor %}
+                <div class="form-group row">
+                    <form method="post">
+                        {% csrf_token %}
+                        <input type="hidden" name="comment_id" value="{{ comment.id }}">
+                        {{ comment_form.as_p }}
+                        {% if request.user.is_authenticated %}
+                            <input type="submit" value="Submit" class="btn btn-outline-success">
+                        {% else %}
+                            <input type="submit" value="Submit" class="btn btn-outline-success" disabled>
+                        {% endif %}
+
+                    </form>
+
+                </div>
+
+            </div>
+        {% endfor %}
+
+    </div>
+
+
+
+{% endblock %}
+
